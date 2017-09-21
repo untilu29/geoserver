@@ -23,7 +23,8 @@ RUN \
   apt-get clean && \
   rm -rf /var/lib/apt/lists/* && \
   rm -rf /var/cache/oracle-jdk8-installer && \
-  rm -rf /tmp/* /var/tmp/*
+  rm -rf /tmp/* /var/tmp/* && \
+  apt-get -y install xmlstarlet
 
 ENV JAVA_HOME /usr/lib/jvm/java-8-oracle
 
@@ -83,6 +84,16 @@ RUN rm -rf $GEOSERVER_HOME/webapps/geoserver/WEB-INF/lib/jai_codec-1.1.3.jar && 
 COPY default_point.sld $GEOSERVER_HOME/data_dir/styles
 COPY sample_workspace $GEOSERVER_HOME/data_dir/workspaces
 
+# Database setting manual config
+RUN if [ ! -z "$DATABASE_SCHEMA" ] ; then xmlstarlet ed --inplace -u '/dataStore/connectionParameters/entry[@key="schema"]' -v $DATABASE_SCHEMA $GEOSERVER_HOME/data_dir/workspaces/gdb/gdb/datastore.xml ; fi
+RUN if [ ! -z "$DATABASE_NAME" ] ; then xmlstarlet ed --inplace -u '/dataStore/connectionParameters/entry[@key="database"]' -v $DATABASE_NAME $GEOSERVER_HOME/data_dir/workspaces/gdb/gdb/datastore.xml ; fi
+RUN if [ ! -z "$DATABASE_PORT" ] ; then xmlstarlet ed --inplace -u '/dataStore/connectionParameters/entry[@key="port"]' -v $DATABASE_PORT $GEOSERVER_HOME/data_dir/workspaces/gdb/gdb/datastore.xml ; fi
+RUN if [ ! -z "$DATABASE_USER" ] ; then xmlstarlet ed --inplace -u '/dataStore/connectionParameters/entry[@key="user"]' -v $DATABASE_USER $GEOSERVER_HOME/data_dir/workspaces/gdb/gdb/datastore.xml ; fi
+RUN if [ ! -z "$DATABASE_PASSWORD" ] ; then xmlstarlet ed --inplace -u '/dataStore/connectionParameters/entry[@key="passwd"]' -v $DATABASE_PASSWORD $GEOSERVER_HOME/data_dir/workspaces/gdb/gdb/datastore.xml ; fi
+RUN if [ ! -z "$DATABASE_HOST" ] ; then xmlstarlet ed --inplace -u '/dataStore/connectionParameters/entry[@key="host"]' -v $DATABASE_HOST $GEOSERVER_HOME/data_dir/workspaces/gdb/gdb/datastore.xml ; fi
+RUN if [ ! -z "$DATABASE_MAX_CONNECTION" ] ; then xmlstarlet ed --inplace -u '/dataStore/connectionParameters/entry[@key="max connections"]' -v $DATABASE_MAX_CONNECTION $GEOSERVER_HOME/data_dir/workspaces/gdb/gdb/datastore.xml ; fi
+
+# Database setting in datastore file
 RUN if [ ! -z "$GEOSERVER_CONFIG_FILE" ] ; then wget -q $GEOSERVER_CONFIG_FILE -O $GEOSERVER_HOME/data_dir/workspaces/gdb/gdb/datastore.xml ; fi
 
 ENV USER 1001

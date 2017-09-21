@@ -9,9 +9,9 @@
   </workspace>
   <connectionParameters>
     <entry key="schema">public</entry>
-    <entry key="database">generic_dashboard</entry>
+    <entry key="database">dashboard</entry>
     <entry key="port">5432</entry>
-    <entry key="user"></entry>
+    <entry key="user">postgres</entry>
     <entry key="passwd">123456</entry>
     <entry key="host">os-postgis</entry>
     <entry key="Evictor run periodicity">300</entry>
