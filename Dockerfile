@@ -83,7 +83,7 @@ ENV BADGER_VERSION 0.5.0
 
 
 RUN apt-get -y update --fix-missing && \
-    apt-get install -y libssl-dev libffi-dev python-dev python-pip    
+    apt-get install -y wget libssl-dev libffi-dev python-dev python-pip    
 
 # Needed for config resolution for service & secrets lookups
 RUN pip install Jinja2 credstash validators
