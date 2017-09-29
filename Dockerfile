@@ -16,7 +16,7 @@ RUN dpkg-divert --local --rename --add /sbin/initctl
 # Install packages
 RUN \
   apt-get -y update --fix-missing && \
-  apt-get -y install unzip software-properties-common xmlstarlet && \
+  apt-get -y install unzip software-properties-common xmlstarlet && apt-get install -y libssl-dev libffi-dev python-dev python-pip && \
   echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | debconf-set-selections && \
   add-apt-repository -y ppa:webupd8team/java && \
   apt-get -y update && \
