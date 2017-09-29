@@ -8,6 +8,7 @@ ENV JAVA_OPTS "-Xms2g -Xmx2g"
 ENV GDAL_DATA $GDAL_PATH/1.10
 ENV PATH $GDAL_PATH:$PATH
 ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:/usr/lib/jni:/usr/share/java
+ENV BADGER_VERSION 0.5.0
 
 RUN export DEBIAN_FRONTEND=noninteractive
 RUN dpkg-divert --local --rename --add /sbin/initctl
