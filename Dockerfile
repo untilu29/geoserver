@@ -105,6 +105,10 @@ RUN wget -O /usr/src/badger.tar.gz https://git.axonvibelabs.com/devops/badger/re
 # RUN if [ ! -z "$DATABASE_HOST" ] ; then xmlstarlet ed --inplace -u '/dataStore/connectionParameters/entry[@key="host"]' -v $DATABASE_HOST $DATASTORE_PATH ; fi
 # RUN if [ ! -z "$GEOSERVER_MAX_CONNECTION" ] ; then xmlstarlet ed --inplace -u '/dataStore/connectionParameters/entry[@key="max connections"]' -v $GEOSERVER_MAX_CONNECTION $DATASTORE_PATH ; fi
 
+# Needed for config resolution for service & secrets lookups
+RUN pip install Jinja2 credstash validators
+
+
 ENV USER 1001
 RUN chown -R 1001:0 "$GEOSERVER_HOME" && chmod -R ug+rwx "$GEOSERVER_HOME"
 USER 1001
