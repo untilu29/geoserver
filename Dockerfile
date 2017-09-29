@@ -55,7 +55,7 @@ RUN wget -c http://downloads.sourceforge.net/project/geoserver/GeoServer/$GEOSER
 RUN wget -c http://downloads.sourceforge.net/project/geoserver/GeoServer/$GEOSERVER_VERSION/extensions/geoserver-$GEOSERVER_VERSION-ogr-wfs-plugin.zip -O ~/geoserver-ogr-plugin.zip &&\
     unzip -o ~/geoserver-ogr-plugin.zip -d /opt/geoserver/webapps/geoserver/WEB-INF/lib/ && \
     rm ~/geoserver-ogr-plugin.zip
-    
+
 # Get GDAL plugin
 RUN wget -c http://downloads.sourceforge.net/project/geoserver/GeoServer/$GEOSERVER_VERSION/extensions/geoserver-$GEOSERVER_VERSION-gdal-plugin.zip -O ~/geoserver-gdal-plugin.zip &&\
     unzip -o ~/geoserver-gdal-plugin.zip -d /opt/geoserver/webapps/geoserver/WEB-INF/lib/ && \
@@ -83,17 +83,26 @@ RUN rm -rf $GEOSERVER_HOME/webapps/geoserver/WEB-INF/lib/jai_codec-1.1.3.jar && 
 COPY default_point.sld $GEOSERVER_HOME/data_dir/styles
 COPY sample_workspace $GEOSERVER_HOME/data_dir/workspaces
 
-# Database setting manual config
-RUN if [ ! -z "$DATABASE_SCHEMA" ] ; then xmlstarlet ed --inplace -u '/dataStore/connectionParameters/entry[@key="schema"]' -v $DATABASE_SCHEMA $GEOSERVER_HOME/data_dir/workspaces/gdb/gdb/datastore.xml ; fi
-RUN if [ ! -z "$DATABASE_NAME" ] ; then xmlstarlet ed --inplace -u '/dataStore/connectionParameters/entry[@key="database"]' -v $DATABASE_NAME $GEOSERVER_HOME/data_dir/workspaces/gdb/gdb/datastore.xml ; fi
-RUN if [ ! -z "$DATABASE_PORT" ] ; then xmlstarlet ed --inplace -u '/dataStore/connectionParameters/entry[@key="port"]' -v $DATABASE_PORT $GEOSERVER_HOME/data_dir/workspaces/gdb/gdb/datastore.xml ; fi
-RUN if [ ! -z "$DATABASE_USER" ] ; then xmlstarlet ed --inplace -u '/dataStore/connectionParameters/entry[@key="user"]' -v $DATABASE_USER $GEOSERVER_HOME/data_dir/workspaces/gdb/gdb/datastore.xml ; fi
-RUN if [ ! -z "$DATABASE_PASSWORD" ] ; then xmlstarlet ed --inplace -u '/dataStore/connectionParameters/entry[@key="passwd"]' -v $DATABASE_PASSWORD $GEOSERVER_HOME/data_dir/workspaces/gdb/gdb/datastore.xml ; fi
-RUN if [ ! -z "$DATABASE_HOST" ] ; then xmlstarlet ed --inplace -u '/dataStore/connectionParameters/entry[@key="host"]' -v $DATABASE_HOST $GEOSERVER_HOME/data_dir/workspaces/gdb/gdb/datastore.xml ; fi
-RUN if [ ! -z "$DATABASE_MAX_CONNECTION" ] ; then xmlstarlet ed --inplace -u '/dataStore/connectionParameters/entry[@key="max connections"]' -v $DATABASE_MAX_CONNECTION $GEOSERVER_HOME/data_dir/workspaces/gdb/gdb/datastore.xml ; fi
+ENV DATASTORE_PATH "$GEOSERVER_HOME/data_dir/workspaces/gdb/gdb/datastore.xml"
 
-# Database setting in datastore file
-RUN if [ ! -z "$GEOSERVER_CONFIG_FILE" ] ; then wget -q $GEOSERVER_CONFIG_FILE -O $GEOSERVER_HOME/data_dir/workspaces/gdb/gdb/datastore.xml ; fi
+# Install badger for config resolution
+RUN wget -O /usr/src/badger.tar.gz https://git.axonvibelabs.com/devops/badger/repository/archive.tar.gz?ref=$BADGER_VERSION \
+    && tar xvzf /usr/src/badger.tar.gz -C /usr/src/ \
+    && mv /usr/src/badger-$BADGER_VERSION-* /usr/src/badger \
+    && rm /usr/src/badger.tar.gz
+
+
+# # Database setting in datastore file
+# RUN if [ ! -z "$GEOSERVER_CONFIG_FILE" ] ; then wget -q $GEOSERVER_CONFIG_FILE -O $GEOSERVER_HOME/data_dir/workspaces/gdb/gdb/datastore.xml ; fi
+
+# # Database setting manual config
+# RUN if [ ! -z "$DATABASE_SCHEMA" ] ; then xmlstarlet ed --inplace -u '/dataStore/connectionParameters/entry[@key="schema"]' -v $DATABASE_SCHEMA $DATASTORE_PATH ; fi
+# RUN if [ ! -z "$DATABASE_NAME" ] ; then xmlstarlet ed --inplace -u '/dataStore/connectionParameters/entry[@key="database"]' -v $DATABASE_NAME $DATASTORE_PATH ; fi
+# RUN if [ ! -z "$DATABASE_PORT" ] ; then xmlstarlet ed --inplace -u '/dataStore/connectionParameters/entry[@key="port"]' -v $DATABASE_PORT $DATASTORE_PATH ; fi
+# RUN if [ ! -z "$DATABASE_USER" ] ; then xmlstarlet ed --inplace -u '/dataStore/connectionParameters/entry[@key="user"]' -v $DATABASE_USER $DATASTORE_PATH ; fi
+# RUN if [ ! -z "$DATABASE_PASSWORD" ] ; then xmlstarlet ed --inplace -u '/dataStore/connectionParameters/entry[@key="passwd"]' -v $DATABASE_PASSWORD $DATASTORE_PATH ; fi
+# RUN if [ ! -z "$DATABASE_HOST" ] ; then xmlstarlet ed --inplace -u '/dataStore/connectionParameters/entry[@key="host"]' -v $DATABASE_HOST $DATASTORE_PATH ; fi
+# RUN if [ ! -z "$GEOSERVER_MAX_CONNECTION" ] ; then xmlstarlet ed --inplace -u '/dataStore/connectionParameters/entry[@key="max connections"]' -v $GEOSERVER_MAX_CONNECTION $DATASTORE_PATH ; fi
 
 ENV USER 1001
 RUN chown -R 1001:0 "$GEOSERVER_HOME" && chmod -R ug+rwx "$GEOSERVER_HOME"
@@ -101,4 +110,4 @@ USER 1001
 
 # Expose GeoServer's default port
 EXPOSE 8080
-CMD /opt/geoserver/bin/startup.sh
+CMD  python /usr/src/badger/bin/fetch_config.py   $DATASTORE_PATH; /opt/geoserver/bin/startup.sh

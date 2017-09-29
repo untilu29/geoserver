@@ -1,0 +1,118 @@
+kind: Template
+apiVersion: v1
+metadata:
+  name: "geoserver-for-postgis" 
+  annotations:
+    description: "An example Geoserver application with a Postgis database" 
+    tags: "instant-app,java,spring,postgis" 
+    iconClass: "icon-java"
+labels:
+  template: java
+objects:
+  - kind: BuildConfig
+    apiVersion: v1
+    metadata:
+      name: ${APP_NAME}
+      annotations:
+        description: Defines how to build the application
+    spec:
+      source:
+        type: Git
+        git:
+          uri: "${SOURCE_REPOSITORY_URL}" 
+          ref: "${SOURCE_REPOSITORY_REF}"
+        contextDir: "${CONTEXT_DIR}"
+      strategy:
+        type: Docker
+        dockerStrategy:
+          from:
+            kind: ImageStreamTag
+            namespace: lmc-dashboard
+            name: ${APP_NAME}:latest
+          env:
+            - name: GEOSERVER_CONFIG_FILE
+              value: "${GEOSERVER_CONFIG_FILE}"
+
+            - name: DATABASE_SCHEMA
+              value: "${DATABASE_SCHEMA}"
+
+            - name: DATABASE_NAME
+              value: "${DATABASE_NAME}"
+
+            - name: DATABASE_PORT
+              value: "${DATABASE_PORT}"
+
+            - name: DATABASE_USER
+              value: "${DATABASE_USER}"
+
+            - name: DATABASE_PASSWORD
+              value: "${DATABASE_PASSWORD}"
+
+            - name: DATABASE_HOST
+              value: "${DATABASE_HOST}"
+
+            - name: GEOSERVER_MAX_CONNECTION
+              value: "${GEOSERVER_MAX_CONNECTION}"     
+            
+      output:
+        to:
+          kind: ImageStreamTag
+          name: ${APP_NAME}:latest
+ 
+  # - kind: "Service" 
+  #   apiVersion: "v1"
+  #   metadata:
+  #     name: "geoserver-for-postgis"
+  #     annotations:
+  #       description: "Exposes and load balances the application pods"
+  #   spec:
+  #     ports:
+  #       - name: "geo-server"
+  #         port: 8080
+  #         targetPort: 8080
+  #     selector:
+  #       name: "geoserver-for-postgis"
+
+parameters:
+  - name: SOURCE_REPOSITORY_URL 
+    description: The URL of the repository with your application source code 
+    value: https://github.com/untilu29/geoserver.git 
+    required: true 
+  
+  - name : APP_NAME
+    description : Name of application
+    value :
+
+  - name: SOURCE_REPOSITORY_REF
+    description: The branch of your application source code 
+    value: master
+    required: true
+  
+  - name: CONTEXT_DIR
+    description: The context directory of your application source code (empty will be root folder)
+    value: 
+  
+  - name: GEOSERVER_CONFIG_FILE
+    description: The URL of your datastore.yml file (we don't need to use bellow parametters) 
+    value: 'https://pastebin.com/raw/dxBTahCS'
+  
+  - name: DATABASE_SCHEMA
+    description: 'The schema of your database (default: public)'
+  
+  - name: DATABASE_NAME
+    description: 'The name of your database (default: dashboard)' 
+ 
+  - name: DATABASE_PORT
+    description: 'The port of your database (default: 5432)' 
+  
+  - name: DATABASE_USER
+    description: 'The username of your database (default: postgres)' 
+
+  - name: DATABASE_PASSWORD
+    description: 'The password of your database (default: 123456)' 
+ 
+  - name: DATABASE_HOST
+    description: 'The host of your database (default: os-postgis)' 
+  
+  - name: GEOSERVER_MAX_CONNECTION
+    description: 'The max connection of your geoserver (default: 10)' 
