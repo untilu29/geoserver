@@ -10,8 +10,7 @@ ENV PATH $GDAL_PATH:$PATH
 ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:/usr/lib/jni:/usr/share/java
 ENV DATASTORE_PATH "$GEOSERVER_HOME/data_dir/workspaces/gdb/gdb/datastore.xml"
 ENV CRYPTO_HOME /usr/bin/crypto
-ENV AV_ASYMMETRIC_KEY `cat /etc/cryptic/asym-key`
-ENV AV_CONFIG_DEST_PATH $DATASTORE_PATH
+
 
 RUN export DEBIAN_FRONTEND=noninteractive
 RUN dpkg-divert --local --rename --add /sbin/initctl
@@ -96,4 +95,8 @@ USER 1001
 
 # Expose GeoServer's default port
 EXPOSE 8080
-CMD  crypto ; /opt/geoserver/bin/startup.sh
+CMD  export AV_ASYMMETRIC_KEY=`cat /etc/cryptic/asym-key` && \
+     export AV_CONFIG_SRC_PATH="$(dirname $AV_CONFIG_SRC_PATH)/datastore.xml" && \
+     export AV_CONFIG_DEST_PATH=$DATASTORE_PATH && \
+     crypto && \
+     /opt/geoserver/bin/startup.sh
